@@ -4,6 +4,8 @@ const useSpeechToText = (options) => {
     const [isListening, setIsListening] = useState(false);
     const [transcript, setTranscript] = useState("");
     const recognitionRef = useRef(null);
+    const [startTime, setStartTime] = useState(null);
+    const [duration, setDuration] = useState(0);
 
     useEffect(() => {
         if (!('webkitSpeechRecognition' in window)) {
@@ -54,13 +56,24 @@ const useSpeechToText = (options) => {
         if(recognitionRef.current && !isListening) {
             recognitionRef.current.start();
             setIsListening(true)
+            setStartTime(Date.now());
+
         }
     }
+    const getWordsPerMinute = () => {
+        if (!startTime) return 0;
+
+        const duration = (Date.now() - startTime) / 60000; // Convert duration to minutes
+        const wordCount = transcript.split(" ").length;
+        return Math.round(wordCount / duration);
+    };
 
     const stopListening = () => {
         if(recognitionRef.current && isListening) {
             recognitionRef.current.stop();
             setIsListening(false)
+            setDuration(Date.now() - startTime); // Calculate duration in ms
+
         }
     }
 
@@ -69,7 +82,8 @@ const useSpeechToText = (options) => {
             isListening, 
             transcript,
             startListening,
-            stopListening
+            stopListening,
+            getWordsPerMinute
         
     }
 }
